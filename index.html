@@ -73,6 +73,9 @@
         </div>
       </div>
       <div class="navbar-right">
+        <button class="m3u-nav-btn" id="m3uNavBtn" title="Load M3U Playlist">
+          <i class="fas fa-list"></i><span>Load M3U</span>
+        </button>
         <button class="icon-btn" title="Notifications"><i class="fas fa-bell"></i></button>
         <button class="icon-btn" title="Settings" id="settingsBtn"><i class="fas fa-cog"></i></button>
         <div class="user-avatar">
@@ -280,10 +283,141 @@
   <!-- ═══════════════ TOAST ═══════════════ -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- ═══════════════ M3U LOADER MODAL ═══════════════ -->
+  <div class="m3u-modal" id="m3uModal">
+    <div class="m3u-backdrop"></div>
+    <div class="m3u-box">
+
+      <!-- Header -->
+      <div class="m3u-header">
+        <img src="https://i.ibb.co/vxH3gvTG/file-00000000cc4071fa826af73bab5dba55.png" alt="MITV" class="m3u-logo" />
+        <h2 class="m3u-title">Load Your Playlist</h2>
+        <p class="m3u-sub">Paste an M3U URL or upload a file to get started</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="m3u-tabs">
+        <button class="m3u-tab active" data-tab="url">
+          <i class="fas fa-link"></i> URL
+        </button>
+        <button class="m3u-tab" data-tab="file">
+          <i class="fas fa-upload"></i> Upload File
+        </button>
+        <button class="m3u-tab" data-tab="saved" id="savedTab" style="display:none">
+          <i class="fas fa-history"></i> Last Used
+        </button>
+      </div>
+
+      <!-- Tab: URL -->
+      <div class="m3u-tab-content active" id="tab-url">
+        <div class="m3u-input-group">
+          <i class="fas fa-link m3u-input-icon"></i>
+          <input
+            type="url"
+            id="m3uUrlInput"
+            class="m3u-input"
+            placeholder="https://example.com/playlist.m3u or .m3u8"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="m3u-clear-btn" id="m3uClearUrl" title="Clear">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <p class="m3u-hint">
+          <i class="fas fa-shield-alt"></i>
+          Your URL stays on your device only
+        </p>
+      </div>
+
+      <!-- Tab: File -->
+      <div class="m3u-tab-content" id="tab-file">
+        <label class="m3u-drop-zone" id="m3uDropZone" for="m3uFileInput">
+          <div class="drop-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+          <p class="drop-title">Drop your M3U file here</p>
+          <p class="drop-sub">or click to browse</p>
+          <p class="drop-types">.m3u · .m3u8 · .txt</p>
+        </label>
+        <input type="file" id="m3uFileInput" accept=".m3u,.m3u8,.txt" style="display:none" />
+        <div class="m3u-file-chosen" id="m3uFileChosen" style="display:none">
+          <i class="fas fa-file-video"></i>
+          <span id="m3uFileName">No file chosen</span>
+          <button id="m3uFileRemove"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+
+      <!-- Tab: Saved -->
+      <div class="m3u-tab-content" id="tab-saved">
+        <div class="m3u-saved-info" id="m3uSavedInfo">
+          <i class="fas fa-history"></i>
+          <div>
+            <p id="m3uSavedName">—</p>
+            <small id="m3uSavedMeta">—</small>
+          </div>
+          <button class="m3u-saved-load-btn" id="m3uSavedLoad">
+            <i class="fas fa-play"></i> Load Again
+          </button>
+        </div>
+        <button class="m3u-saved-clear-btn" id="m3uSavedClear">
+          <i class="fas fa-trash"></i> Clear Saved Playlist
+        </button>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="m3u-progress" id="m3uProgress" style="display:none">
+        <div class="m3u-progress-bar" id="m3uProgressBar"></div>
+        <p class="m3u-progress-label" id="m3uProgressLabel">Fetching playlist…</p>
+      </div>
+
+      <!-- Error -->
+      <div class="m3u-error" id="m3uError" style="display:none">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span id="m3uErrorMsg">Something went wrong.</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="m3u-actions">
+        <button class="m3u-skip-btn" id="m3uSkip">
+          Use Demo Channels
+        </button>
+        <button class="m3u-load-btn" id="m3uLoadBtn">
+          <i class="fas fa-play"></i>
+          <span id="m3uLoadBtnText">Load Playlist</span>
+        </button>
+      </div>
+
+      <!-- Stats after load -->
+      <div class="m3u-stats" id="m3uStats" style="display:none">
+        <div class="stat-item">
+          <span class="stat-num" id="statChannels">0</span>
+          <span class="stat-label">Channels</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="statCategories">0</span>
+          <span class="stat-label">Categories</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="statLive">0</span>
+          <span class="stat-label">Live</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/m3u-parser.js"></script>
   <script src="js/player.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/m3u-loader.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // MITVApp.init() already called inside app.js
+      // Now init the M3U loader after app is ready
+      setTimeout(() => M3ULoader.init(), 100);
+    });
+  </script>
 </body>
 </html>
