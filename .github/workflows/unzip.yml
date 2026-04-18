@@ -1,0 +1,39 @@
+name: Auto Unzip to Root
+on:
+  push:
+    paths:
+      - '**.zip'
+
+jobs:
+  unzip-process:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract Files to Root
+        run: |
+          # 1. Ek temporary folder mein extract karen
+          mkdir temp_extract
+          unzip -o "*.zip" -d temp_extract
+          
+          # 2. Check karen agar andar sirf ek hi folder hai
+          # Agar hai, to uske andar ka saara maal bahar le aayen
+          if [ $(ls -1 temp_extract | wc -l) -eq 1 ] && [ -d temp_extract/* ]; then
+            mv temp_extract/*/* ./
+          else
+            mv temp_extract/* ./
+          fi
+          
+          # 3. Safayi (Cleanup)
+          rm -rf temp_extract
+          rm *.zip
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Files extracted to root" && git push)
