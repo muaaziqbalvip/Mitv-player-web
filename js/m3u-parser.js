@@ -1,243 +1,318 @@
 /* ═══════════════════════════════════════════════════════════════
-   MITV Player — M3U Parser
-   By: Muaaz Iqbal · Muslim Islam
+   MITV Player Pro — M3U Parser v3
+   Handles: M3U, M3U8, Xtream Codes, millions of channels
    ═══════════════════════════════════════════════════════════════ */
 
 const M3UParser = (() => {
 
-  // Parse raw M3U text into channel objects
-  function parse(text) {
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-    const channels = [];
+  // ─── CATEGORY KEYWORDS ───────────────────────────────────────
+  const CAT_KEYWORDS = {
+    islamic:['islam','muslim','quran','قرآن','مسلم','اسلام','prayer','ramadan','masjid','mosque','deen','iqra','peace tv','hidayat','huda','noor','azan','sunnah','hadith','mecca','medina','kaba','hajj','halal','islamic','al quran','quran kareem','madani','sunni','shia','fatwa','hijri'],
+    news:['news','bbc','cnn','fox news','abc news','nbc news','sky news','al jazeera','aljazeera','geo news','ary news','dawn','aaj','samaa','express news','dunya','india tv','ndtv','zee news','times now','republic','channel 4 news','al arabiya','france 24','dw','euronews','cbs news','msnbc','bloomberg','wion','dd news','reporter'],
+    movies:['movie','cinema','film','hbo','showtime','star','max','filmfare','bollywood','hollywood','oscar','zee cinema','b4u','cinemas','pictures','entertainment','drama','premiere','channel cinema','cine','filmbox','cinemax','stargate','tv5 monde'],
+    series:['series','season','episode','zee tv','star plus','colors','sony tv','life ok','sahara','zee5','hotstar','ullu','altbalaji','netflix','prime video','disney','serial'],
+    music:['music','mtv','vh1','vevo','beats','jazz','classical','pop','rock','hip hop','radio','hits','melody','sound','fm','chart','songs','gaane','music tv','b4u music','eros','music india','song'],
+    sports:['sport','espn','bein','sky sport','cricket','football','soccer','nba','nfl','tennis','golf','f1','formula','star sports','ptv sports','willow','ten sports','supersport','eurosport','dazn','fight','boxing','ufc','mma','hockey','basketball','olympic'],
+    kids:['kids','cartoon','nickelodeon','nick','disney','cartoon network','cn','pogo','baby','junior','child','children','toons','anime','boomerang','discovery kids'],
+    news_urdu:['urdu','pakistan','urdu news','geo','ary'],
+    documentary:['discovery','nat geo','national geographic','documentary','history channel','animal planet','science','tlc','travel','explore'],
+  };
 
-    if (!lines[0] || !lines[0].startsWith('#EXTM3U')) {
-      // Try as plain URL list
-      return parsePlain(lines);
+  const PROXIES = [
+    url => url,
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://thingproxy.freeboard.io/fetch/${url}`,
+    url => `https://yacdn.org/serve/${url}`,
+  ];
+
+  // ─── MAIN: FETCH & PARSE ──────────────────────────────────────
+  async function fetchAndParse(url, onProgress) {
+    // Xtream Codes detection
+    if (isXtreamUrl(url)) {
+      return fetchXtream(url, onProgress);
     }
+    return fetchM3U(url, onProgress);
+  }
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+  function isXtreamUrl(url) {
+    return url.includes('get.php') || url.includes('player_api') || url.includes('xmltv.php');
+  }
+
+  // ─── FETCH M3U ────────────────────────────────────────────────
+  async function fetchM3U(url, onProgress) {
+    let lastErr = null;
+
+    for (let i = 0; i < PROXIES.length; i++) {
+      try {
+        onProgress?.(Math.round(10 + i * 10), `Trying source ${i + 1}/${PROXIES.length}...`);
+        const proxyUrl = PROXIES[i](url);
+        const ctrl = new AbortController();
+        const timeout = setTimeout(() => ctrl.abort(), 20000);
+
+        const res = await fetch(proxyUrl, {
+          signal: ctrl.signal,
+          headers: { 'Accept': 'text/plain,application/x-mpegurl,*/*' }
+        });
+        clearTimeout(timeout);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        if (!text || text.length < 30) throw new Error('Empty response');
+
+        onProgress?.(60, 'Parsing channels...');
+        const channels = parseM3UText(text, onProgress);
+        if (channels.length === 0) throw new Error('No channels found');
+
+        onProgress?.(90, `Categorizing ${channels.length} channels...`);
+        const grouped = groupChannels(channels);
+
+        onProgress?.(100, 'Done!');
+        return { channels, ...grouped, total: channels.length, source: 'm3u' };
+
+      } catch(e) {
+        lastErr = e;
+        console.warn(`Proxy ${i + 1} failed:`, e.message);
+      }
+    }
+    throw new Error(lastErr?.message || 'Failed to load playlist');
+  }
+
+  // ─── PARSE M3U TEXT (streaming, chunk-based for large files) ──
+  function parseM3UText(text, onProgress) {
+    const channels = [];
+    // Handle both \r\n and \n
+    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    const total = lines.length;
+
+    let i = 0;
+    // Skip until #EXTM3U header (be lenient — some playlists don't have it)
+    if (lines[0] && lines[0].startsWith('#EXTM3U')) i = 1;
+
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      i++;
+
+      if (!line || line.startsWith('#EXTVLCOPT') || line.startsWith('#KODIPROP') || line.startsWith('#EXTGRP')) {
+        continue;
+      }
+
       if (line.startsWith('#EXTINF:')) {
         const channel = parseExtInf(line);
-        // Find the URL on the next non-comment line
-        for (let j = i + 1; j < lines.length; j++) {
-          const next = lines[j];
-          if (!next.startsWith('#')) {
-            channel.url = next;
-            i = j;
-            break;
-          }
-          // Parse extra tags like #EXTVLCOPT, etc.
+        // Skip empty VLC opts until we find URL
+        while (i < lines.length) {
+          const next = lines[i].trim();
+          i++;
+          if (!next) continue;
           if (next.startsWith('#EXTVLCOPT:http-user-agent=')) {
-            channel.userAgent = next.split('=')[1];
+            channel.userAgent = next.split('=').slice(1).join('=');
+            continue;
           }
           if (next.startsWith('#EXTHTTP:')) {
-            try { channel.httpHeaders = JSON.parse(next.replace('#EXTHTTP:', '')); } catch(e){}
+            try { channel.httpHeaders = JSON.parse(next.replace('#EXTHTTP:', '')); } catch(e) {}
+            continue;
           }
+          if (next.startsWith('#')) continue; // skip other comments
+          channel.url = next;
+          break;
         }
-        if (channel.url) {
+        if (channel.url && channel.url.length > 5) {
           channel.id = `ch_${channels.length}`;
           channels.push(channel);
         }
+        // Progress every 5000 channels
+        if (channels.length % 5000 === 0) {
+          onProgress?.(60 + Math.round((i / total) * 25), `Parsed ${channels.length} channels...`);
+        }
+      } else if (isUrl(line)) {
+        // Plain URL list fallback
+        channels.push({
+          id: `ch_${channels.length}`,
+          name: `Channel ${channels.length + 1}`,
+          url: line,
+          group: 'General',
+          logo: '',
+          tvgId: '',
+          tvgName: '',
+          category: 'live'
+        });
       }
     }
 
     return channels;
   }
 
-  function parsePlain(lines) {
-    return lines
-      .filter(l => l.startsWith('http'))
-      .map((url, i) => ({
-        id: `ch_${i}`,
-        name: `Channel ${i + 1}`,
-        url,
-        group: 'General',
-        logo: '',
-        tvgId: '',
-        tvgName: '',
-      }));
+  function isUrl(str) {
+    return str.startsWith('http://') || str.startsWith('https://') || str.startsWith('rtmp://') || str.startsWith('rtmpe://') || str.startsWith('rtmps://');
   }
 
   function parseExtInf(line) {
-    const channel = {
-      name: 'Unknown Channel',
-      group: 'General',
-      logo: '',
-      tvgId: '',
-      tvgName: '',
-      url: '',
-      userAgent: '',
-      httpHeaders: null,
-    };
+    const ch = { name: 'Channel', group: 'General', logo: '', tvgId: '', tvgName: '', url: '' };
 
-    // Extract duration (not used for IPTV but parsed anyway)
-    // #EXTINF:-1 tvg-id="..." tvg-name="..." tvg-logo="..." group-title="...",Name
+    const extract = (rx) => { const m = line.match(rx); return m ? m[1] : ''; };
 
-    // Extract attributes
-    const attrs = {
-      'tvg-id': /tvg-id="([^"]*)"/i,
-      'tvg-name': /tvg-name="([^"]*)"/i,
-      'tvg-logo': /tvg-logo="([^"]*)"/i,
-      'group-title': /group-title="([^"]*)"/i,
-      'tvg-language': /tvg-language="([^"]*)"/i,
-      'tvg-country': /tvg-country="([^"]*)"/i,
-    };
+    ch.tvgId = extract(/tvg-id="([^"]*)"/i);
+    ch.tvgName = extract(/tvg-name="([^"]*)"/i);
+    ch.logo = extract(/tvg-logo="([^"]*)"/i);
+    ch.group = extract(/group-title="([^"]*)"/i) || 'General';
+    ch.language = extract(/tvg-language="([^"]*)"/i);
+    ch.country = extract(/tvg-country="([^"]*)"/i);
 
-    for (const [key, rx] of Object.entries(attrs)) {
-      const m = line.match(rx);
-      if (m) {
-        switch(key) {
-          case 'tvg-id': channel.tvgId = m[1]; break;
-          case 'tvg-name': channel.tvgName = m[1]; break;
-          case 'tvg-logo': channel.logo = m[1]; break;
-          case 'group-title': channel.group = m[1] || 'General'; break;
-          case 'tvg-language': channel.language = m[1]; break;
-          case 'tvg-country': channel.country = m[1]; break;
-        }
-      }
+    // Name after last comma
+    const ci = line.lastIndexOf(',');
+    if (ci !== -1) {
+      ch.name = line.slice(ci + 1).trim();
     }
+    if (!ch.name) ch.name = ch.tvgName || 'Channel';
 
-    // Extract channel name (after last comma)
-    const commaIdx = line.lastIndexOf(',');
-    if (commaIdx !== -1) {
-      channel.name = line.slice(commaIdx + 1).trim() || channel.tvgName || 'Unknown';
-    }
-
-    // Fallback name
-    if (!channel.name || channel.name === 'Unknown') {
-      channel.name = channel.tvgName || 'Channel';
-    }
-
-    return channel;
+    return ch;
   }
 
-  // Categorize channels by keywords
-  const CATEGORIES = {
-    islamic: [
-      'islam', 'muslim', 'quran', 'قرآن', 'مسلم', 'اسلام', 'prayer',
-      'ramadan', 'masjid', 'mosque', 'deen', 'iqra', 'peace tv',
-      'hidayat', 'huda', 'noor', 'azan', 'sunnah', 'hadith',
-      'mecca', 'medina', 'kaba', 'hajj', 'halal', 'islamic',
-    ],
-    news: [
-      'news', 'bbc', 'cnn', 'fox news', 'abc news', 'nbc news',
-      'sky news', 'al jazeera', 'aljazeera', 'مخبر', 'geo news',
-      'ary news', 'dawn', 'aaj', 'samaa', 'express news', 'dunya',
-      'india tv', 'ndtv', 'zee news', 'times now', 'republic',
-      'channel 4 news', 'al arabiya', 'france 24', 'dw', 'euronews',
-    ],
-    movies: [
-      'movie', 'cinema', 'film', 'hbo', 'showtime', 'star', 'sony',
-      'max', 'filmfare', 'bollywood', 'hollywood', 'oscar',
-      'netfli', 'amazon', 'apple tv', 'zee cinema', 'b4u',
-      'cinemas', 'pictures', 'entertainment', 'drama',
-    ],
-    music: [
-      'music', 'mtv', 'vh1', 'vevo', 'beats', 'jazz', 'classical',
-      'pop', 'rock', 'hip hop', 'radio', 'hits', 'melody', 'sound',
-      'audio', 'fm', 'chart', 'songs', 'gaane', 'music tv',
-    ],
-    sports: [
-      'sport', 'espn', 'bein', 'sky sport', 'cricket', 'football',
-      'soccer', 'nba', 'nfl', 'tennis', 'golf', 'f1', 'formula',
-      'star sports', 'ptv sports', 'willow', 'ten sports',
-    ],
-  };
+  // ─── XTREAM CODES ─────────────────────────────────────────────
+  async function fetchXtream(url, onProgress) {
+    // Parse Xtream URL: http://host:port/get.php?username=X&password=Y
+    let host, username, password;
+    try {
+      const u = new URL(url);
+      host = `${u.protocol}//${u.host}`;
+      username = u.searchParams.get('username');
+      password = u.searchParams.get('password');
+    } catch(e) { throw new Error('Invalid Xtream URL'); }
 
-  function categorize(channel) {
-    const text = `${channel.name} ${channel.group} ${channel.tvgName}`.toLowerCase();
-    const groupLower = channel.group.toLowerCase();
+    onProgress?.(10, 'Connecting to Xtream panel...');
 
-    for (const [cat, keywords] of Object.entries(CATEGORIES)) {
-      for (const kw of keywords) {
-        if (text.includes(kw) || groupLower.includes(kw)) {
-          return cat;
-        }
+    // Live streams
+    const allChannels = [];
+
+    try {
+      const liveUrl = `${host}/player_api.php?username=${username}&password=${password}&action=get_live_streams`;
+      const liveRes = await fetchJson(liveUrl);
+      if (Array.isArray(liveRes)) {
+        onProgress?.(40, `Got ${liveRes.length} live channels...`);
+        liveRes.forEach((ch, idx) => {
+          allChannels.push({
+            id: `xt_live_${idx}`,
+            name: ch.name || `Channel ${idx}`,
+            url: `${host}/live/${username}/${password}/${ch.stream_id}.m3u8`,
+            group: ch.category_name || 'Live TV',
+            logo: ch.stream_icon || '',
+            tvgId: String(ch.stream_id),
+            tvgName: ch.name || '',
+            category: 'live',
+            xtreamType: 'live'
+          });
+        });
       }
-    }
-    return 'live'; // default → Live TV
+    } catch(e) { console.warn('Live fetch failed:', e); }
+
+    try {
+      onProgress?.(55, 'Fetching VOD movies...');
+      const vodUrl = `${host}/player_api.php?username=${username}&password=${password}&action=get_vod_streams`;
+      const vodRes = await fetchJson(vodUrl);
+      if (Array.isArray(vodRes)) {
+        vodRes.slice(0, 5000).forEach((ch, idx) => {
+          allChannels.push({
+            id: `xt_vod_${idx}`,
+            name: ch.name || `Movie ${idx}`,
+            url: `${host}/movie/${username}/${password}/${ch.stream_id}.mp4`,
+            group: ch.category_name || 'Movies',
+            logo: ch.stream_icon || ch.movie_image || '',
+            tvgId: String(ch.stream_id),
+            tvgName: ch.name || '',
+            category: 'movies',
+            xtreamType: 'vod'
+          });
+        });
+      }
+    } catch(e) { console.warn('VOD fetch failed:', e); }
+
+    try {
+      onProgress?.(75, 'Fetching series...');
+      const seriesUrl = `${host}/player_api.php?username=${username}&password=${password}&action=get_series`;
+      const seriesRes = await fetchJson(seriesUrl);
+      if (Array.isArray(seriesRes)) {
+        seriesRes.slice(0, 3000).forEach((ch, idx) => {
+          allChannels.push({
+            id: `xt_series_${idx}`,
+            name: ch.name || `Series ${idx}`,
+            url: `${host}/series/${username}/${password}/${ch.series_id}.m3u8`,
+            group: ch.category_name || 'Series',
+            logo: ch.cover || ch.backdrop_path || '',
+            tvgId: String(ch.series_id),
+            tvgName: ch.name || '',
+            category: 'series',
+            xtreamType: 'series'
+          });
+        });
+      }
+    } catch(e) { console.warn('Series fetch failed:', e); }
+
+    if (allChannels.length === 0) throw new Error('No content found from Xtream panel');
+
+    onProgress?.(90, 'Organizing content...');
+    // Re-categorize based on group
+    allChannels.forEach(ch => {
+      if (ch.xtreamType !== 'live') return;
+      ch.category = categorize(ch);
+    });
+
+    const grouped = groupChannels(allChannels);
+    onProgress?.(100, 'Done!');
+    return { channels: allChannels, ...grouped, total: allChannels.length, source: 'xtream' };
   }
 
+  async function fetchJson(url) {
+    for (const makeUrl of PROXIES) {
+      try {
+        const res = await fetch(makeUrl(url), { signal: AbortSignal.timeout(12000) });
+        if (!res.ok) continue;
+        const json = await res.json();
+        return json;
+      } catch(e) {}
+    }
+    throw new Error('JSON fetch failed');
+  }
+
+  // ─── CATEGORIZE ───────────────────────────────────────────────
+  function categorize(ch) {
+    const text = `${ch.name} ${ch.group} ${ch.tvgName}`.toLowerCase();
+    for (const [cat, kws] of Object.entries(CAT_KEYWORDS)) {
+      for (const kw of kws) {
+        if (text.includes(kw)) return cat;
+      }
+    }
+    return 'live';
+  }
+
+  // ─── GROUP CHANNELS ───────────────────────────────────────────
   function groupChannels(channels) {
-    const groups = {
-      live: [],
-      news: [],
-      movies: [],
-      music: [],
-      islamic: [],
-      sports: [],
-    };
-
+    const groups = { live:[], news:[], movies:[], series:[], music:[], sports:[], islamic:[], kids:[], documentary:[] };
     const byGroup = {};
 
     for (const ch of channels) {
-      ch.category = categorize(ch);
-      if (groups[ch.category]) {
-        groups[ch.category].push(ch);
+      if (!ch.category) ch.category = categorize(ch);
+      const cat = ch.category;
+
+      if (groups[cat]) {
+        groups[cat].push(ch);
       } else {
         groups.live.push(ch);
+        ch.category = 'live';
       }
 
-      // Also group by original group-title
       const grp = ch.group || 'General';
       if (!byGroup[grp]) byGroup[grp] = [];
-      byGroup[grp].push(ch);
+      if (byGroup[grp].length < 200) byGroup[grp].push(ch); // cap per group
     }
 
     return { groups, byGroup };
   }
 
-  // Fetch and parse M3U from URL (with CORS proxy fallback)
-  async function fetchAndParse(url, onProgress) {
-    const proxies = [
-      url, // Direct first
-      `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-      `https://cors-anywhere.herokuapp.com/${url}`,
-    ];
-
-    let lastError = null;
-
-    for (let i = 0; i < proxies.length; i++) {
-      try {
-        onProgress && onProgress(Math.round((i / proxies.length) * 50), `Trying source ${i + 1}...`);
-
-        const res = await fetch(proxies[i], {
-          headers: {
-            'Accept': 'text/plain, application/x-mpegurl, */*',
-          },
-          signal: AbortSignal.timeout(15000),
-        });
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const text = await res.text();
-
-        if (!text || text.length < 20) throw new Error('Empty response');
-
-        onProgress && onProgress(70, 'Parsing channels...');
-
-        const channels = parse(text);
-
-        if (channels.length === 0) throw new Error('No channels found in playlist');
-
-        onProgress && onProgress(90, `Found ${channels.length} channels...`);
-
-        const { groups, byGroup } = groupChannels(channels);
-
-        onProgress && onProgress(100, 'Done!');
-
-        return { channels, groups, byGroup, total: channels.length };
-
-      } catch (err) {
-        lastError = err;
-        console.warn(`Source ${i + 1} failed:`, err.message);
-      }
-    }
-
-    throw new Error(lastError?.message || 'Failed to load playlist from all sources');
+  // ─── CUSTOM XTREAM BUILD ──────────────────────────────────────
+  async function fetchXtreamCustom(host, username, password, onProgress) {
+    const url = `${host}/get.php?username=${username}&password=${password}&type=m3u_plus&output=ts`;
+    return fetchM3U(url, onProgress);
   }
 
-  return { parse, fetchAndParse, categorize, groupChannels };
+  return { fetchAndParse, fetchXtreamCustom, parseM3UText, groupChannels, categorize };
 })();
