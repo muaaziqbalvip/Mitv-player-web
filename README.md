@@ -1,16 +1,17 @@
-# 🔥 MITV PLAYER
-### By: Muaaz Iqbal · Muslim Islam Project
-
-A premium, Netflix-style Progressive Web App for IPTV streaming.
+# 🔥 MITV Player Pro v3.0
+### By Muaaz Iqbal · Muslim Islam Project
+### Premium AI-Powered IPTV PWA
 
 ---
 
 ## 🚀 Quick Start
 
-### Option 1: Open Directly
-Just open `index.html` in a modern browser (Chrome, Firefox, Edge, Safari).
+### Open Directly:
+```
+Open index.html in Chrome / Edge / Firefox / Safari
+```
 
-### Option 2: Local Server (Recommended for PWA features)
+### Local Server (Recommended):
 ```bash
 # Python
 python -m http.server 8080
@@ -18,48 +19,97 @@ python -m http.server 8080
 # Node.js
 npx serve .
 
-# PHP
-php -S localhost:8080
+# Then open: http://localhost:8080
 ```
-Then open: `http://localhost:8080`
 
-### Option 3: Deploy Online
-Upload to any static host:
-- **Netlify** (drag & drop the folder)
-- **Vercel** (`vercel deploy`)
-- **GitHub Pages**
-- **Firebase Hosting**
+### Deploy Online:
+- **Netlify**: Drag the folder → Live instantly
+- **Vercel**: `vercel deploy`
+- **GitHub Pages**: Push to repo → Enable Pages
+- **Firebase Hosting**: `firebase deploy`
 
 ---
 
-## 📡 Using the App
+## 🔑 Credentials Already Configured
 
-1. Open MITV Player
-2. Enter your M3U/M3U8 playlist URL
-3. Click **Load Channels**
-4. Browse and enjoy!
+| Service | Status |
+|---------|--------|
+| Firebase Auth | ✅ Google Login enabled |
+| Firebase Realtime DB | ✅ Connected |
+| Groq AI API | ✅ Integrated |
 
-### Supported URL formats:
-- `https://example.com/playlist.m3u`
-- `https://example.com/playlist.m3u8`
-- `https://example.com/get.php?username=X&password=Y&type=m3u_plus`
+---
+
+## 📡 Supported Input Formats
+
+| Format | Example |
+|--------|---------|
+| M3U URL | `http://server.com/list.m3u` |
+| M3U8 URL | `http://server.com/playlist.m3u8` |
+| Xtream Codes | `http://server.com/get.php?username=X&password=Y&type=m3u_plus` |
+| Xtream Panel | Use built-in panel tab in setup |
+| Player API | `http://server.com/player_api.php?username=X&password=Y` |
+
+---
+
+## 🎬 Supported Stream Types
+
+| Type | Support |
+|------|---------|
+| HLS (.m3u8) | ✅ Native HLS.js |
+| TS streams | ✅ HLS.js |
+| MPEG-DASH (.mpd) | ✅ Shaka Player |
+| MP4 / WebM | ✅ Native |
+| RTMP | ⚠️ Display URL only (needs VLC) |
 
 ---
 
 ## ✨ Features
 
-| Feature | Details |
-|---------|---------|
-| 🎨 Netflix-style UI | Dark theme with neon glow effects |
-| 📺 Auto-categorization | Live TV, News, Movies, Music, Islamic, Sports |
-| 🔍 Live search | Instant channel search |
-| ⭐ Favorites | Save & manage favorite channels |
-| 📱 Mobile-first | Fully responsive + touch gestures |
-| 💾 PWA | Install as app, offline support |
-| 🎬 HLS Support | Native HLS.js integration |
-| ⌨️ Keyboard shortcuts | Space, F, M, Arrow keys |
-| 🔄 Auto-refresh | Background playlist refresh |
-| 💿 Channel cache | 3-hour local cache |
+### 🔐 Authentication
+- Google Sign-In via Firebase
+- Guest mode (no account needed)
+- User profiles saved to Firebase
+
+### 🤖 AI (Groq API - Llama 3)
+- Natural language channel search
+- Personalized recommendations
+- AI chat assistant in modal
+- Tracks your preferences
+
+### 📊 Analytics (Firebase Realtime DB)
+- Watch time per category
+- Channel view history
+- Search queries tracked
+- Session analytics
+- Category preferences
+
+### 🎬 Player
+- HLS.js + Shaka Player (DASH)
+- Audio track switching
+- Subtitle/CC support
+- Quality level selection (AUTO/HD/SD)
+- Previous/Next channel
+- Picture-in-Picture
+- Fullscreen
+- Keyboard shortcuts
+- Auto-retry on error (3x)
+- Click sound UX
+
+### 📺 UI/UX
+- Netflix-style dark theme
+- Neon glow accents
+- Hero banner
+- AI recommendation chips
+- Horizontal scrollable rows
+- Skeleton loaders
+- Search (instant + AI-powered)
+- Favorites (localStorage)
+- Watch history
+- About section
+- Xtream Codes support
+- Millions of channels handled
+- 4-hour local cache
 
 ---
 
@@ -67,73 +117,45 @@ Upload to any static host:
 
 | Key | Action |
 |-----|--------|
-| `Space` / `K` | Play / Pause |
-| `F` | Toggle Fullscreen |
-| `M` | Toggle Mute |
-| `↑` / `↓` | Volume |
-| `←` / `→` | Seek (VOD) |
-| `Esc` | Close Player |
+| Space / K | Play/Pause |
+| F | Fullscreen |
+| M | Mute |
+| N | Next Channel |
+| P | Previous Channel |
+| ↑↓ | Volume |
+| ←→ | Seek (VOD) |
+| Esc | Close player |
 
 ---
 
-## 🏗️ File Structure
+## 🔥 Firebase Setup
+
+1. Go to Firebase Console → Authentication → Sign-in methods
+2. Enable **Google** sign-in
+3. Add your domain to **Authorized domains**
+4. Import `firebase-rules.json` to Realtime Database rules
+
+---
+
+## 📁 File Structure
 
 ```
-mitv-player/
-├── index.html          # Main HTML
-├── manifest.json       # PWA manifest
-├── sw.js               # Service Worker
+mitv-player-pro/
+├── index.html              ← Main UI
+├── manifest.json           ← PWA manifest
+├── sw.js                   ← Service Worker
+├── firebase-rules.json     ← DB security rules
 ├── css/
-│   └── style.css       # All styles
+│   └── style.css           ← Premium styles
 └── js/
-    ├── m3u-parser.js   # M3U parser + categorizer
-    ├── player.js       # Video player module
-    └── app.js          # Main app logic
+    ├── firebase-config.js  ← Firebase + Auth
+    ├── tracker.js          ← Analytics tracking
+    ├── m3u-parser.js       ← M3U + Xtream parser
+    ├── ai-engine.js        ← Groq AI integration
+    ├── player.js           ← Universal video player
+    └── app.js              ← Main app logic
 ```
 
 ---
 
-## 🛠️ Backend Integration
-
-To connect to your IPTV backend, use any standard M3U URL:
-
-```
-http://your-server.com/get.php?username=USER&password=PASS&type=m3u_plus&output=ts
-```
-
-The app auto-handles:
-- CORS proxy fallback
-- HLS stream detection
-- Channel grouping
-- Error recovery
-
----
-
-## 📱 Install as App (PWA)
-
-**Android (Chrome):**
-1. Open in Chrome
-2. Tap menu → "Add to Home Screen"
-
-**iOS (Safari):**
-1. Open in Safari
-2. Tap Share → "Add to Home Screen"
-
-**Desktop (Chrome/Edge):**
-1. Click the install icon in the address bar
-
----
-
-## 🎨 Color Theme
-
-| Color | Hex | Use |
-|-------|-----|-----|
-| Background | `#0a0a0a` | Main bg |
-| Cards | `#111111` | Card bg |
-| Pink | `#ff0057` | Primary accent |
-| Purple | `#7a00ff` | Gradient |
-| Blue | `#00c3ff` | Secondary accent |
-
----
-
-**MITV Player v2.0** · Made with ❤️ by Muaaz Iqbal · Muslim Islam
+**MITV Player Pro v3.0** · Made with ❤️ by Muaaz Iqbal · Muslim Islam
