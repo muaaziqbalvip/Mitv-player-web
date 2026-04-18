@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="MITV Player – Premium Islamic IPTV Streaming" />
+  <title>MITV Player – By Muaaz Iqbal</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════ CLICK SOUND ═══════════════ -->
+  <audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" preload="auto"></audio>
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://i.ibb.co/vxH3gvTG/file-00000000cc4071fa826af73bab5dba55.png" alt="MITV Logo" class="sidebar-logo-img" />
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-section="home">
+        <i class="fas fa-home"></i><span>Home</span>
+      </a>
+      <a href="#" class="nav-item" data-section="livetv">
+        <i class="fas fa-tv"></i><span>Live TV</span>
+      </a>
+      <a href="#" class="nav-item" data-section="islamic">
+        <i class="fas fa-mosque"></i><span>Islamic</span>
+      </a>
+      <a href="#" class="nav-item" data-section="movies">
+        <i class="fas fa-film"></i><span>Movies</span>
+      </a>
+      <a href="#" class="nav-item" data-section="favorites">
+        <i class="fas fa-star"></i><span>Favorites</span>
+      </a>
+      <a href="#" class="nav-item" data-section="settings">
+        <i class="fas fa-cog"></i><span>Settings</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <p class="sidebar-credit">By <strong>Muaaz Iqbal</strong></p>
+      <p class="sidebar-project">Muslim Islam Project</p>
+    </div>
+  </aside>
+
+  <!-- ═══════════════ MAIN WRAPPER ═══════════════ -->
+  <div class="main-wrapper" id="mainWrapper">
+
+    <!-- ═══════════════ TOP NAVBAR ═══════════════ -->
+    <header class="navbar" id="navbar">
+      <div class="navbar-left">
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <img src="https://i.ibb.co/vxH3gvTG/file-00000000cc4071fa826af73bab5dba55.png" alt="MITV" class="navbar-logo" />
+        <span class="navbar-brand">MITV <span class="brand-sub">PLAYER</span></span>
+      </div>
+      <div class="navbar-center">
+        <div class="search-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Search channels, shows…" class="search-bar" autocomplete="off" />
+          <div class="search-results" id="searchResults"></div>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <button class="icon-btn" title="Notifications"><i class="fas fa-bell"></i></button>
+        <button class="icon-btn" title="Settings" id="settingsBtn"><i class="fas fa-cog"></i></button>
+        <div class="user-avatar">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=mitv&backgroundColor=0a0a0a" alt="User" />
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══════════════ CONTENT AREA ═══════════════ -->
+    <main class="content" id="content">
+
+      <!-- ─── HERO SECTION ─── -->
+      <section class="hero" id="hero">
+        <div class="hero-bg" id="heroBg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content" id="heroContent">
+          <div class="hero-badge"><i class="fas fa-circle live-dot"></i> LIVE NOW</div>
+          <h1 class="hero-title" id="heroTitle">Loading…</h1>
+          <p class="hero-desc" id="heroDesc">Premium streaming at your fingertips</p>
+          <div class="hero-actions">
+            <button class="btn-primary" id="heroWatchBtn">
+              <i class="fas fa-play"></i> Watch Now
+            </button>
+            <button class="btn-secondary" id="heroFavBtn">
+              <i class="fas fa-heart"></i> Favourite
+            </button>
+          </div>
+        </div>
+        <div class="hero-scroll-hint"><i class="fas fa-chevron-down"></i></div>
+      </section>
+
+      <!-- ─── CHANNEL ROWS ─── -->
+      <section class="rows-section" id="rowsSection">
+
+        <!-- Skeleton (shown while loading) -->
+        <div class="skeleton-section" id="skeletonSection">
+          <div class="skeleton-title"></div>
+          <div class="skeleton-row">
+            <div class="skeleton-card" style="--i:0"></div>
+            <div class="skeleton-card" style="--i:1"></div>
+            <div class="skeleton-card" style="--i:2"></div>
+            <div class="skeleton-card" style="--i:3"></div>
+            <div class="skeleton-card" style="--i:4"></div>
+            <div class="skeleton-card" style="--i:5"></div>
+          </div>
+          <div class="skeleton-title" style="margin-top:36px"></div>
+          <div class="skeleton-row">
+            <div class="skeleton-card" style="--i:0"></div>
+            <div class="skeleton-card" style="--i:1"></div>
+            <div class="skeleton-card" style="--i:2"></div>
+            <div class="skeleton-card" style="--i:3"></div>
+            <div class="skeleton-card" style="--i:4"></div>
+          </div>
+        </div>
+
+        <!-- Rows rendered by JS -->
+        <div id="channelRows"></div>
+
+      </section>
+
+    </main>
+
+    <!-- ═══════════════ BOTTOM NAV (MOBILE) ═══════════════ -->
+    <nav class="bottom-nav" id="bottomNav">
+      <a href="#" class="bnav-item active" data-section="home">
+        <i class="fas fa-home"></i><span>Home</span>
+      </a>
+      <a href="#" class="bnav-item" data-section="livetv">
+        <i class="fas fa-tv"></i><span>Live</span>
+      </a>
+      <a href="#" class="bnav-item" data-section="islamic">
+        <i class="fas fa-mosque"></i><span>Islamic</span>
+      </a>
+      <a href="#" class="bnav-item" data-section="favorites">
+        <i class="fas fa-star"></i><span>Favourites</span>
+      </a>
+      <a href="#" class="bnav-item" data-section="settings">
+        <i class="fas fa-cog"></i><span>Settings</span>
+      </a>
+    </nav>
+
+  </div><!-- /main-wrapper -->
+
+  <!-- ═══════════════ VIDEO PLAYER MODAL ═══════════════ -->
+  <div class="player-modal" id="playerModal">
+    <div class="player-backdrop" id="playerBackdrop"></div>
+    <div class="player-container">
+      <div class="player-header">
+        <div class="player-channel-info">
+          <img src="" alt="" class="player-channel-logo" id="playerLogo" />
+          <div>
+            <h2 class="player-channel-name" id="playerName">Channel Name</h2>
+            <span class="player-badge"><i class="fas fa-circle"></i> LIVE</span>
+          </div>
+        </div>
+        <div class="player-header-actions">
+          <button class="player-icon-btn" id="playerFavBtn" title="Favourite"><i class="fas fa-heart"></i></button>
+          <button class="player-icon-btn" id="playerClose" title="Close"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+
+      <div class="video-wrapper">
+        <video id="videoPlayer" playsinline></video>
+        <div class="video-spinner" id="videoSpinner">
+          <div class="spinner-ring"></div>
+          <p>Connecting to stream…</p>
+        </div>
+        <div class="video-error" id="videoError">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Stream Unavailable</h3>
+          <p id="videoErrorMsg">Unable to connect. Please try another channel.</p>
+          <button class="btn-primary" id="retryBtn"><i class="fas fa-redo"></i> Retry</button>
+        </div>
+        <div class="video-overlay-center" id="videoOverlayCenter"></div>
+      </div>
+
+      <div class="player-controls" id="playerControls">
+        <div class="progress-wrapper">
+          <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-thumb" id="progressThumb"></div>
+          </div>
+          <div class="time-display">
+            <span id="currentTime">LIVE</span>
+            <span id="duration">∞</span>
+          </div>
+        </div>
+        <div class="controls-row">
+          <div class="controls-left">
+            <button class="ctrl-btn" id="playPauseBtn"><i class="fas fa-pause"></i></button>
+            <button class="ctrl-btn" id="muteBtn"><i class="fas fa-volume-up"></i></button>
+            <div class="volume-slider-wrap">
+              <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="1" />
+            </div>
+            <span class="live-indicator"><i class="fas fa-circle"></i> LIVE</span>
+          </div>
+          <div class="controls-center">
+            <span class="ctrl-channel-name" id="ctrlChannelName"></span>
+          </div>
+          <div class="controls-right">
+            <button class="ctrl-btn" id="pipBtn" title="Picture-in-Picture"><i class="fas fa-clone"></i></button>
+            <button class="ctrl-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SETTINGS PANEL ═══════════════ -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-overlay" id="settingsOverlay"></div>
+    <div class="settings-drawer">
+      <div class="settings-header">
+        <h2><i class="fas fa-cog"></i> Settings</h2>
+        <button id="settingsClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-group">
+          <h3>Appearance</h3>
+          <div class="setting-item">
+            <span>Accent Color</span>
+            <div class="color-pills">
+              <button class="color-pill active" data-color="pink" style="background:linear-gradient(135deg,#ff0057,#7a00ff)"></button>
+              <button class="color-pill" data-color="cyan" style="background:linear-gradient(135deg,#00c3ff,#0077ff)"></button>
+              <button class="color-pill" data-color="gold" style="background:linear-gradient(135deg,#ffd700,#ff8c00)"></button>
+              <button class="color-pill" data-color="green" style="background:linear-gradient(135deg,#00ff87,#00c3a0)"></button>
+            </div>
+          </div>
+          <div class="setting-item">
+            <span>Card Size</span>
+            <div class="toggle-group">
+              <button class="toggle-btn active" data-size="normal">Normal</button>
+              <button class="toggle-btn" data-size="large">Large</button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h3>Playback</h3>
+          <div class="setting-item">
+            <span>Auto-play</span>
+            <label class="switch"><input type="checkbox" checked /><span class="slider-toggle"></span></label>
+          </div>
+          <div class="setting-item">
+            <span>HLS Low Latency</span>
+            <label class="switch"><input type="checkbox" checked /><span class="slider-toggle"></span></label>
+          </div>
+          <div class="setting-item">
+            <span>Sound on Hover</span>
+            <label class="switch"><input type="checkbox" id="soundToggle" checked /><span class="slider-toggle"></span></label>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h3>About</h3>
+          <div class="about-card">
+            <img src="https://i.ibb.co/vxH3gvTG/file-00000000cc4071fa826af73bab5dba55.png" alt="MITV" class="about-logo" />
+            <p><strong>MITV Player</strong> v2.0</p>
+            <p>By <em>Muaaz Iqbal</em></p>
+            <p class="about-project">Muslim Islam Project 🌙</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TOAST ═══════════════ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
