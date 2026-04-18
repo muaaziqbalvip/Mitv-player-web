@@ -1,117 +1,139 @@
-# 🔥 MITV Player
-### 👑 By Muaaz Iqbal · Muslim Islam Project 🌙
+# 🔥 MITV PLAYER
+### By: Muaaz Iqbal · Muslim Islam Project
 
-A **Premium Netflix-Style OTT Streaming PWA** for IPTV channels.
+A premium, Netflix-style Progressive Web App for IPTV streaming.
 
 ---
 
 ## 🚀 Quick Start
 
-1. **Extract** the ZIP file
-2. **Open** `index.html` in a browser  
-   *(For best experience, serve via local server — see below)*
-3. That's it! The UI loads instantly.
+### Option 1: Open Directly
+Just open `index.html` in a modern browser (Chrome, Firefox, Edge, Safari).
 
-## 🖥️ Local Server (Recommended)
-
-For HLS stream playback to work correctly, serve from a local HTTP server:
-
+### Option 2: Local Server (Recommended for PWA features)
 ```bash
 # Python
 python -m http.server 8080
 
-# Node.js (npx)
+# Node.js
 npx serve .
 
-# VS Code
-Install "Live Server" extension → Right-click index.html → Open with Live Server
+# PHP
+php -S localhost:8080
 ```
+Then open: `http://localhost:8080`
 
-Then visit: `http://localhost:8080`
+### Option 3: Deploy Online
+Upload to any static host:
+- **Netlify** (drag & drop the folder)
+- **Vercel** (`vercel deploy`)
+- **GitHub Pages**
+- **Firebase Hosting**
 
 ---
 
-## 📁 Project Structure
+## 📡 Using the App
 
-```
-mitv-player/
-├── index.html          # Main entry point
-├── manifest.json       # PWA manifest
-├── css/
-│   └── style.css       # All styles (dark theme + animations)
-└── js/
-    ├── data.js         # Channel data & categories
-    ├── player.js       # HLS video player engine
-    └── app.js          # Main app logic
-```
+1. Open MITV Player
+2. Enter your M3U/M3U8 playlist URL
+3. Click **Load Channels**
+4. Browse and enjoy!
+
+### Supported URL formats:
+- `https://example.com/playlist.m3u`
+- `https://example.com/playlist.m3u8`
+- `https://example.com/get.php?username=X&password=Y&type=m3u_plus`
 
 ---
 
 ## ✨ Features
 
 | Feature | Details |
-|---|---|
-| 🎨 Theme | Deep black with neon pink/purple/blue gradients |
-| 📺 HLS Streaming | Via hls.js with low-latency mode |
-| 🔍 Live Search | Instant channel search across all categories |
-| ⭐ Favourites | Persistent across sessions (localStorage) |
-| 🎛️ Settings | Accent color, card size, audio, playback |
-| 🖥️ Desktop | Sidebar navigation, hover effects |
-| 📱 Mobile | Bottom nav bar, touch-friendly cards |
-| ⌨️ Keyboard | Space/K = play, M = mute, F = fullscreen, Esc = close |
-| 🖼️ PiP | Picture-in-Picture support |
-| 🌀 Animations | Skeleton loaders, scroll reveal, card hover glow |
-| 🔔 Toast Alerts | Smooth notification system |
+|---------|---------|
+| 🎨 Netflix-style UI | Dark theme with neon glow effects |
+| 📺 Auto-categorization | Live TV, News, Movies, Music, Islamic, Sports |
+| 🔍 Live search | Instant channel search |
+| ⭐ Favorites | Save & manage favorite channels |
+| 📱 Mobile-first | Fully responsive + touch gestures |
+| 💾 PWA | Install as app, offline support |
+| 🎬 HLS Support | Native HLS.js integration |
+| ⌨️ Keyboard shortcuts | Space, F, M, Arrow keys |
+| 🔄 Auto-refresh | Background playlist refresh |
+| 💿 Channel cache | 3-hour local cache |
 
 ---
 
-## 🛠️ Customization
+## ⌨️ Keyboard Shortcuts
 
-### Add Channels
-Edit `js/data.js` → add to any category's `channels` array:
+| Key | Action |
+|-----|--------|
+| `Space` / `K` | Play / Pause |
+| `F` | Toggle Fullscreen |
+| `M` | Toggle Mute |
+| `↑` / `↓` | Volume |
+| `←` / `→` | Seek (VOD) |
+| `Esc` | Close Player |
 
-```js
-{
-  id: 'unique_id',
-  name: 'Channel Name',
-  category: 'Live TV',
-  quality: 'HD',          // HD / FHD / 4K
-  logo: 'URL_TO_LOGO',
-  thumbnail: 'URL_TO_BG',
-  stream: 'HLS_STREAM_URL.m3u8',
-  isLive: true
-}
+---
+
+## 🏗️ File Structure
+
+```
+mitv-player/
+├── index.html          # Main HTML
+├── manifest.json       # PWA manifest
+├── sw.js               # Service Worker
+├── css/
+│   └── style.css       # All styles
+└── js/
+    ├── m3u-parser.js   # M3U parser + categorizer
+    ├── player.js       # Video player module
+    └── app.js          # Main app logic
 ```
 
-### Change Accent Color
-In `css/style.css`, update `:root` variables:
-```css
---accent1: #ff0057;
---accent2: #7a00ff;
---accent3: #00c3ff;
+---
+
+## 🛠️ Backend Integration
+
+To connect to your IPTV backend, use any standard M3U URL:
+
+```
+http://your-server.com/get.php?username=USER&password=PASS&type=m3u_plus&output=ts
 ```
 
-### M3U Playlist Integration
-Replace static `MITV_DATA.categories` with dynamic parsing of your `.m3u` playlist in `js/data.js`.
+The app auto-handles:
+- CORS proxy fallback
+- HLS stream detection
+- Channel grouping
+- Error recovery
 
 ---
 
-## 📦 Dependencies (CDN)
+## 📱 Install as App (PWA)
 
-- **hls.js** — HLS stream playback
-- **Font Awesome 6** — Icons
-- **Google Fonts** — Bebas Neue + Outfit
+**Android (Chrome):**
+1. Open in Chrome
+2. Tap menu → "Add to Home Screen"
 
----
+**iOS (Safari):**
+1. Open in Safari
+2. Tap Share → "Add to Home Screen"
 
-## 🌙 Muslim Islam Project
-
-Built with ❤️ for the Muslim community to access:
-- Mecca & Medina Live streams
-- Quran channels
-- Islamic lectures
-- Peace TV, Huda TV, Iqraa, Islam Channel
+**Desktop (Chrome/Edge):**
+1. Click the install icon in the address bar
 
 ---
 
-*© 2025 MITV Player by Muaaz Iqbal. All rights reserved.*
+## 🎨 Color Theme
+
+| Color | Hex | Use |
+|-------|-----|-----|
+| Background | `#0a0a0a` | Main bg |
+| Cards | `#111111` | Card bg |
+| Pink | `#ff0057` | Primary accent |
+| Purple | `#7a00ff` | Gradient |
+| Blue | `#00c3ff` | Secondary accent |
+
+---
+
+**MITV Player v2.0** · Made with ❤️ by Muaaz Iqbal · Muslim Islam

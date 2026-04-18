@@ -1,11 +1,11 @@
 {
   "name": "MITV Player",
   "short_name": "MITV",
-  "description": "Premium Islamic IPTV Streaming by Muaaz Iqbal",
+  "description": "Premium IPTV Streaming by Muaaz Iqbal · Muslim Islam",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
-  "theme_color": "#ff0057",
+  "theme_color": "#0a0a0a",
   "orientation": "any",
   "icons": [
     {
@@ -20,5 +20,5 @@
     }
   ],
   "categories": ["entertainment", "video"],
-  "screenshots": []
+  "lang": "en-US"
 }
